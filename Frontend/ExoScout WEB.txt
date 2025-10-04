@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExoMappers | Exoplanet Tools</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+    /* Color definitions for the background gradient */
+    :root {
+      --bg-1: #071427;
+      --bg-2: #09243a;
+      --bg-3: #0c1729; 
+    }
+
+    body {
+      /* Apply the smooth gradient background */
+      background: linear-gradient(180deg,var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+      color: #e6e6e6;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      transition: background-color 0.5s;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .card {
+      background-color: #101d34;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .btn-custom {
+      background: linear-gradient(to right, #00e4ff, #0077ff, #001dff);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+
+    .btn-custom:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 10px rgba(0, 119, 255, 0.5);
+      transform: translateY(-2px);
+    }
+    
+    /* Logo and Header Styling */
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+    .logo-text {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      margin-left: 10px;
+      color: #ffffff;
+    }
+    @keyframes subtle-rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    #swirl-group {
+      animation: subtle-rotate 30s linear infinite;
+      transform-origin: center center;
+    }
+    .input-field {
+        background-color: #1a2740;
+        border: 1px solid #3d4a66;
+        color: #e6e6e6;
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+    .result-box {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+    }
+    .result-candidate {
+        background-color: #0077ff20;
+        border: 2px solid #0077ff;
+        color: #00e4ff;
+    }
+    .result-false-positive {
+        background-color: #e6606020;
+        border: 2px solid #e66060;
+        color: #ff8888;
+    }
+    .search-result-card {
+        padding: 1.25rem;
+        background-color: #1a2740;
+        border-radius: 12px;
+        margin-top: 1rem;
+        word-wrap: break-word;
+    }
+    .citation {
+        font-size: 0.75rem;
+        color: #888;
+        display: block;
+        margin-top: 0.5rem;
+        text-decoration: underline;
+    }
+
+    /* --- Hero Section & Star Field Animation CSS --- */
+    .hero-bg {
+        background-color: transparent; 
+        position: relative;
+        overflow: hidden; 
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 1; 
+        height: 400px;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 10;
+        padding: 2.5rem 1rem;
+        text-shadow: 0 0 8px rgba(0, 0, 0, 1.0), 0 0 1px rgba(0, 0, 0, 1.0); 
+    }
+
+    .stars-container {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .stars-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        will-change: transform;
+        box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🌌 Persistent Navigation Header -->
+  <nav class="bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10 shadow-lg">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="logo-container">
+            <!-- SVG Logo -->
+            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="ExoMapperGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00e4ff;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#0077ff;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#001dff;stop-opacity:1" />
+                    </linearGradient>
+                    <path id="ribbon-shape" d="M 50 50 L 50 78 A 28 28 0 0 0 78 50 L 78 50 A 28 28 0 0 0 50 22 L 50 50 Z" fill="url(#ExoMapperGradient)" />
+                </defs>
+                <g id="swirl-group" transform="translate(0, 0)">
+                    <use href="#ribbon-shape" transform="rotate(-15, 50, 50)" opacity="1.0" />
+                    <use href="#ribbon-shape" transform="rotate(75, 50, 50)" opacity="0.8" />
+                    <use href="#ribbon-shape" transform="rotate(165, 50, 50)" opacity="0.6" />
+                    <use href="#ribbon-shape" transform="rotate(255, 50, 50)" opacity="0.4" />
+                    <use href="#ribbon-shape" transform="rotate(345, 50, 50)" opacity="0.2" />
+                </g>
+                <circle cx="50" cy="50" r="20" fill="#0c1729"/>
+            </svg>
+            <div class="logo-text">ExoMappers</div>
+        </div>
+        
+        <!-- Navigation Links -->
+        <div class="flex space-x-4">
+            <button onclick="navigateTo('home')" class="text-gray-300 hover:text-white font-medium px-3 py-1 rounded-lg transition duration-150">Home</button>
+            <button onclick="navigateTo('predict')" class="text-gray-300 hover:text-white font-medium px-3 py-1 rounded-lg transition duration-150">🔮 Predict</button>
+            <button onclick="navigateTo('search')" class="text-gray-300 hover:text-white font-medium px-3 py-1 rounded-lg transition duration-150">🔭 Search</button>
+        </div>
+    </div>
+  </nav>
+
+  <!-- ⚡ Main Content Container (Page Views) -->
+  <main class="container mx-auto px-4 py-8">
+
+    <!-- ================================================================= -->
+    <!-- HOME PAGE CONTENT -->
+    <!-- ================================================================= -->
+    <div id="home-page-content" class="hidden">
+        
+        <!-- Hero Section with Animated Star Field -->
+        <div class="hero-bg mb-12">
+            
+            <!-- The Star Field Container: Populated and animated by JS -->
+            <div class="stars-container" aria-hidden="true">
+                <div id="stars1" class="stars-layer"></div>
+                <div id="stars2" class="stars-layer"></div>
+                <div id="stars3" class="stars-layer"></div>
+            </div>
+            
+            <!-- Hero Content (Text and Buttons) -->
+            <div class="hero-content p-8 md-p-16 text-center text-white">
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-lg">
+                    ExoMappers
+                </h1>
+                <p class="text-xl text-cyan-300 font-semibold mb-6">
+                    Exploring New Worlds with Data & AI
+                </p>
+                <p class="max-w-3xl mx-auto text-lg mb-8 text-gray-200">
+                    <strong>ExoMappers</strong> offers AI-powered tools to predict potential exoplanets and explore the vast catalog of confirmed worlds.
+                </p>
+                <div class="flex justify-center space-x-4">
+                    <button onclick="navigateTo('predict')" class="btn-custom flex items-center shadow-lg hover:shadow-xl">
+                        <span class="mr-2">🔮</span> Go to Predict
+                    </button>
+                    <button onclick="navigateTo('search')" class="btn-custom flex items-center shadow-lg hover:shadow-xl bg-gray-600 hover:bg-gray-700">
+                        <span class="mr-2">🔭</span> Go to Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <span class="text-4xl mr-3 text-blue-400">🧠</span>
+                    <h2 class="text-2xl font-bold text-white">Predict New Exoplanets</h2>
+                </div>
+                <p class="text-gray-300">
+                    Classify potential exoplanets from raw signal data. Distinguish between promising Candidate Planets (CP) and False Positives (FP) to help prioritize and focus astronomical research.
+                </p>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <span class="text-4xl mr-3 text-cyan-400">🌌</span>
+                    <h2 class="text-2xl font-bold text-white">Explore Known Planets</h2>
+                </div>
+                <p class="text-gray-300">
+                    Explore the catalog of confirmed exoplanets with up-to-date, verifiable information. Search for specific planets, get key data with cited sources, and have the results read aloud for greater accessibility.
+                </p>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="text-center">
+            <h2 class="section-title text-3xl">About ExoMappers</h2>
+            <p class="max-w-3xl mx-auto text-gray-300 mb-6">
+                Built for the <strong>NASA Space Apps Challenge 2025</strong>, ExoMappers accelerates exoplanet discovery by making complex astronomical data accessible.
+            </p>
+            <img src="https://www.nasa.gov/sites/default/files/thumbnails/image/spaceapps-logo.png" 
+                 alt="NASA Space Apps" class="mx-auto mt-4 w-40 opacity-75">
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- PREDICT PAGE CONTENT -->
+    <!-- ================================================================= -->
+    <div id="predict-page-content" class="hidden">
+      <div class="max-w-3xl mx-auto card">
+        <h3 class="section-title">🔮 Analyze & Predict a Planet</h3>
+        <form id="prediction-form" onsubmit="predictPlanet(event)">
+          
+          <!-- Manual Input fields -->
+          <label class="block mb-2 text-gray-200">Right Ascension (ra, deg)</label>
+          <input type="number" step="any" name="ra" class="w-full mb-4 rounded input-field" placeholder="e.g., 260.0">
+
+          <label class="block mb-2 text-gray-200">Declination (dec, deg)</label>
+          <input type="number" step="any" name="dec" class="w-full mb-4 rounded input-field" placeholder="e.g., 10.0">
+
+          <label class="block mb-2 text-gray-200">Orbital Period (pl_orbper, days)</label>
+          <input type="number" step="any" name="pl_orbper" class="w-full mb-4 rounded input-field" placeholder="e.g., 10.0">
+
+          <label class="block mb-2 text-gray-200">Transit Duration (pl_trandurh, hours)</label>
+          <input type="number" step="any" name="pl_trandurh" class="w-full mb-4 rounded input-field" placeholder="e.g., 3.0">
+
+          <label class="block mb-2 text-gray-200">Transit Depth (pl_trandep, ppm)</label>
+          <input type="number" step="any" name="pl_trandep" class="w-full mb-4 rounded input-field" placeholder="e.g., 5000.0">
+
+          <label class="block mb-2 text-gray-200">Planet Radius (pl_rade, R_Earth)</label>
+          <input type="number" step="any" name="pl_rade" class="w-full mb-4 rounded input-field" placeholder="e.g., 2.0">
+
+          <label class="block mb-2 text-gray-200">Insolation (pl_insol, Earth flux)</label>
+          <input type="number" step="any" name="pl_insol" class="w-full mb-4 rounded input-field" placeholder="e.g., 1.0">
+
+          <label class="block mb-2 text-gray-200">Equilibrium Temperature (pl_eqt, K)</label>
+          <input type="number" step="any" name="pl_eqt" class="w-full mb-4 rounded input-field" placeholder="e.g., 500.0">
+
+          <label class="block mb-2 text-gray-200">Stellar Effective Temperature (st_teff, K)</label>
+          <input type="number" step="any" name="st_teff" class="w-full mb-4 rounded input-field" placeholder="e.g., 5500.0">
+
+          <label class="block mb-2 text-gray-200">Stellar Radius (st_rad, R_Sun)</label>
+          <input type="number" step="any" name="st_rad" class="w-full mb-6 rounded input-field" placeholder="e.g., 0.8">
+
+          <!-- 📂 Upload Option -->
+          <label class="block mb-2 text-gray-200 font-semibold">📂 Or Upload Data File (CSV/Excel)</label>
+          <p class="text-xs text-gray-500 mb-2">Upload a single row or multiple rows (batch prediction) in CSV/TXT/Excel format.</p>
+          <input type="file" name="data_file" id="data_file_input" accept=".csv,.xlsx,.xls,.txt,.json"
+                 class="w-full mb-6 rounded input-field cursor-pointer text-gray-400 
+                        file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold
+                        file:bg-gradient-to-r file:from-cyan-400 file:via-blue-600 file:to-indigo-700 file:text-white 
+                        hover:file:opacity-90"/>
+
+            <!-- Action Buttons for ML and LLM -->
+            <div class="flex space-x-4 mb-4">
+                <button type="submit" class="btn-custom flex-1" id="predict-button">Predict (ML Server)</button>
+                <button type="button" onclick="generateSynthesis(event)" class="btn-custom flex-1 bg-purple-600 hover:bg-purple-700" id="synthesis-button">
+                    <span class="mr-1">✨</span> Generate Synthesis (LLM)
+                </button>
+            </div>
+        </form>
+        
+        <!-- Prediction & Synthesis Results Display -->
+        <div id="prediction-result" class="mt-4">
+          <div class="mt-4 text-sm text-gray-400 text-center">Enter the parameters (leave blank for median imputation) or upload a file.</div>
+          <div class="mt-2 text-sm text-red-400 text-center">⚠ ML Prediction requires local Python Flask server running at http://127.0.0.1:5000/</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SEARCH PAGE CONTENT -->
+    <!-- ================================================================= -->
+    <div id="search-page-content" class="hidden">
+      <div class="max-w-3xl mx-auto card">
+        <h3 class="section-title">🔭 Explore Known Planets</h3>
+        <form id="search-form" onsubmit="searchPlanets(event)">
+          <label class="block mb-2 text-gray-200">Search by Planet Name (e.g., Kepler-22b)</label>
+          <input type="text" id="planet_name" placeholder="Name or identifier" 
+                 class="w-full mb-4 rounded input-field">
+
+          <label class="block mb-2 text-gray-200">Filter by Star Temperature (K)</label>
+          <input type="number" id="st_teff_search" placeholder="e.g. 5800" 
+                 class="w-full mb-4 rounded input-field">
+
+          <button type="submit" class="btn-custom w-full mt-2" id="search-button">
+              Search Exoplanet Data
+          </button>
+        </form>
+
+        <!-- NASA Resources Section -->
+        <div class="mt-8 pt-6 border-t border-gray-700/50">
+            <h4 class="text-lg font-semibold text-center text-white mb-4">Official NASA Exoplanet Catalogs</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <a href="https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=cumulative" target="_blank" rel="noopener noreferrer" class="block p-3 bg-gray-800/50 hover:bg-gray-700/70 rounded-lg transition duration-200 text-blue-300 hover:text-cyan-200 font-medium">
+                    Kepler Objects of Interest (KOI)
+                </a>
+                <a href="https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=TOI" target="_blank" rel="noopener noreferrer" class="block p-3 bg-gray-800/50 hover:bg-gray-700/70 rounded-lg transition duration-200 text-blue-300 hover:text-cyan-200 font-medium">
+                    TESS Objects of Interest (TOI)
+                </a>
+                <a href="https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=k2pandc" target="_blank" rel="noopener noreferrer" class="block p-3 bg-gray-800/50 hover:bg-gray-700/70 rounded-lg transition duration-200 text-blue-300 hover:text-cyan-200 font-medium">
+                    K2 Planets and Candidates
+                </a>
+            </div>
+        </div>
+
+        <div id="search-result" class="mt-4">
+          <div class="mt-4 text-sm text-gray-400 text-center">🔎 Results from the Gemini API will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Persistent Footer -->
+  <footer class="text-center text-gray-500 text-sm pb-6 mt-12 border-t border-gray-800 pt-6">
+    <div class="mb-2">
+        <button onclick="navigateTo('predict')" class="text-blue-400 hover:text-cyan-300 mx-2">Predict</button> |
+        <button onclick="navigateTo('search')" class="text-blue-400 hover:text-cyan-300 mx-2">Search</button>
+    </div>
+    Built by <span class="text-white">ExoMappers</span> for NASA Space Apps Challenge 2025.
+  </footer>
+
+<script type="module">
+
+    // Global variable to store the last generated text for the TTS feature
+    let lastGeneratedText = "";
+    
+    // --- UTILITY FUNCTIONS FOR TTS ---
+
+    /**
+     * Converts a base64 string to an ArrayBuffer.
+     * Required for processing the raw PCM audio data from the TTS API.
+     */
+    function base64ToArrayBuffer(base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    /**
+     * Converts signed 16-bit PCM audio data into a WAV Blob.
+     */
+    function pcmToWav(pcm16, sampleRate = 24000) {
+        const numChannels = 1;
+        const pcmDataLength = pcm16.length * 2; // 2 bytes per sample (Int16)
+        const buffer = new ArrayBuffer(44 + pcmDataLength);
+        const view = new DataView(buffer);
+        let offset = 0;
+
+        function writeString(s) {
+            for (let i = 0; i < s.length; i++) {
+                view.setUint8(offset + i, s.charCodeAt(i));
+            }
+            offset += s.length;
+        }
+
+        // RIFF chunk
+        writeString('RIFF'); // Chunk ID
+        view.setUint32(offset, 36 + pcmDataLength, true); offset += 4; // Chunk Size
+        writeString('WAVE'); // Format
+
+        // FMT sub-chunk
+        writeString('fmt '); // Sub-chunk 1 ID
+        view.setUint32(offset, 16, true); offset += 4; // Sub-chunk 1 Size (16 for PCM)
+        view.setUint16(offset, 1, true); offset += 2; // Audio Format (1 = PCM)
+        view.setUint16(offset, numChannels, true); offset += 2; // Number of Channels (1)
+        view.setUint32(offset, sampleRate, true); offset += 4; // Sample Rate
+        const byteRate = sampleRate * numChannels * 2;
+        view.setUint32(offset, byteRate, true); offset += 4; // Byte Rate
+        view.setUint16(offset, numChannels * 2, true); offset += 2; // Block Align (NumChannels * 2 bytes/sample)
+        view.setUint16(offset, 16, true); offset += 2; // Bits Per Sample (16)
+
+        // DATA sub-chunk
+        writeString('data'); // Sub-chunk 2 ID
+        view.setUint32(offset, pcmDataLength, true); offset += 4; // Sub-chunk 2 Size
+
+        // Write the PCM data
+        for (let i = 0; i < pcm16.length; i++) {
+            view.setInt16(offset, pcm16[i], true); // Write 16-bit signed integer
+            offset += 2;
+        }
+
+        return new Blob([buffer], { type: 'audio/wav' });
+    }
+    // --- END UTILITY FUNCTIONS FOR TTS ---
+
+
+    /* * --- STAR FIELD LOGIC (JS-driven, high performance) --- */
+    const STAR_LAYERS = [
+        { el: document.getElementById('stars1'), count: 240, color: 'rgba(255,255,255,0.95)', sizePx: 1.5, duration: 60000 }, 
+        { el: document.getElementById('stars2'), count: 160, color: 'rgba(128,192,255,0.75)', sizePx: 1, duration: 120000 }, 
+        { el: document.getElementById('stars3'), count: 90,  color: 'rgba(255,204,128,0.6)', sizePx: 1, duration: 200000 }  
+    ];
+
+    function populateLayer(layer, vw, vh) {
+        const { el, count, color, sizePx } = layer;
+        // Check if element exists before proceeding (safety)
+        if (!el) return;
+
+        el.style.width = sizePx + 'px';
+        el.style.height = sizePx + 'px';
+        el.style.borderRadius = '50%';
+        el.style.background = color;
+
+        const shadows = [];
+        const totalHeight = vh * 2; 
+
+        for (let i = 0; i < count; i++) {
+            const x = Math.floor(Math.random() * (vw + 200)); 
+            const y = Math.floor(Math.random() * totalHeight); 
+            shadows.push(`${x}px ${y}px 0 ${color}`);
+        }
+        el.style.boxShadow = shadows.join(', ');
+    }
+
+    function animateLayer(layer, vh) {
+        const { el, duration } = layer;
+        if (!el) return;
+        
+        const keyframes = [
+            { transform: 'translateY(0px)' },
+            { transform: `translateY(-${vh}px)` }
+        ];
+        const opts = { duration: duration, iterations: Infinity, easing: 'linear' };
+        
+        // Cancel existing animation to prevent overlap on resize
+        if (el._anim) el._anim.cancel(); 
+        el._anim = el.animate(keyframes, opts);
+    }
+    
+    /**
+     * The core function to refresh/start the star field animation.
+     * This must be called AFTER the DOM is loaded and element sizes are calculated.
+     */
+    function refreshStarField() {
+        const heroBg = document.querySelector('.hero-bg');
+        if (!heroBg) return;
+
+        // CRITICAL: Get current dimensions for correct scaling and star generation
+        const vw = heroBg.clientWidth;
+        const vh = heroBg.clientHeight;
+
+        STAR_LAYERS.forEach(layer => {
+            populateLayer(layer, vw, vh);
+            animateLayer(layer, vh);
+        });
+    }
+    
+    // Set up responsive refreshing (debounce for performance)
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            refreshStarField();
+        }, 300);
+    });
+
+    // --- END STAR FIELD LOGIC ---
+
+
+    // --- 0. Page Navigation Logic ---
+    const pageContents = {
+        'home': document.getElementById('home-page-content'),
+        'predict': document.getElementById('predict-page-content'),
+        'search': document.getElementById('search-page-content')
+    };
+
+    window.navigateTo = function(page) {
+        for (const key in pageContents) {
+            pageContents[key].classList.add('hidden');
+        }
+        const targetPage = pageContents[page];
+        if (targetPage) {
+            targetPage.classList.remove('hidden');
+            window.scrollTo(0, 0); 
+        }
+    };
+    
+    // CRITICAL FIX: Initialize both the navigation AND the star field 
+    // ONLY AFTER the entire window and all assets are loaded.
+    window.addEventListener('load', () => {
+        navigateTo('home');
+        refreshStarField(); // <-- Ensures sizes are correct when animation starts
+    });
+
+
+    // --- 1. Constants and Utilities ---
+    const FEATURE_ORDER = ["ra", "dec", "pl_orbper", "pl_trandurh", "pl_trandep", "pl_rade", "pl_insol", "pl_eqt", "st_teff", "st_rad"];
+
+    async function retryFetch(url, options, maxRetries = 5) {
+        let lastError = null;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                lastError = error;
+                const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+        throw lastError;
+    }
+
+
+    // =================================================================
+    // PREDICTION LOGIC (🔮 Predict & ✨ Synthesis)
+    // =================================================================
+
+    // Function to get current form data (for both prediction and synthesis)
+    function getExoplanetData() {
+        const form = document.getElementById('prediction-form');
+        const formData = new FormData(form); 
+        const data = {};
+        let hasData = false;
+
+        FEATURE_ORDER.forEach(key => {
+            let value = formData.get(key);
+            if (value && value.trim() !== '') {
+                data[key] = parseFloat(value.trim());
+                hasData = true;
+            } else {
+                data[key] = null; // Use null for missing data
+            }
+        });
+
+        // Check for file input separately, but for synthesis we only use manual inputs
+        const fileInput = formData.get('data_file');
+        const hasFileInput = fileInput && fileInput.size > 0;
+
+        return { data, hasData, hasFileInput };
+    }
+
+    // ML Prediction (Original Logic)
+    window.predictPlanet = async function(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('prediction-form');
+        const resultDiv = document.getElementById('prediction-result');
+        const predictButton = document.getElementById('predict-button');
+        
+        const formData = new FormData(form); 
+        
+        const { hasData, hasFileInput } = getExoplanetData();
+        
+        if (!hasFileInput && !hasData) {
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">
+                Please enter at least one parameter or upload a data file.
+            </div>`;
+            return;
+        }
+
+        // Prepare formData for Flask server (handle 'null' for imputation)
+        FEATURE_ORDER.forEach(key => {
+            let value = formData.get(key);
+            if (!value || value.trim() === '') {
+                formData.set(key, 'null'); 
+            }
+        });
+        const fileInput = formData.get('data_file');
+        if (fileInput && fileInput.size === 0) {
+            formData.delete('data_file');
+        }
+
+        predictButton.textContent = 'Analyzing...';
+        predictButton.disabled = true;
+
+        resultDiv.innerHTML = `<div class="mt-4 text-center">
+            <svg class="animate-spin h-5 w-5 mr-3 inline text-white" viewBox="0 0 24 24">...</svg>
+            Sending data to Python server...
+        </div>`;
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/predict', {
+                method: 'POST',
+                body: formData 
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned status: ${response.status}. Check your Flask app log.`);
+            }
+
+            const result = await response.json();
+            
+            if (result.status === 'error') {
+                throw new Error(result.message);
+            }
+
+            let resultHtml;
+            if (result.prediction_type === 'batch') {
+                 resultHtml = `
+                    <div class="result-box result-candidate text-left">
+                        <p class="text-xl mb-2 font-bold text-center">Batch Prediction Summary</p>
+                        <p class="text-sm text-gray-200">Total Rows Processed: ${result.total_rows || 'N/A'}</p>
+                        <p class="text-sm text-gray-200">Predicted Candidates (CP): <span class="text-blue-300 font-bold">${result.candidates_count || 'N/A'}</span></p>
+                        <p class="text-sm text-gray-200">Predicted False Positives (FP): <span class="text-red-300 font-bold">${result.fp_count || 'N/A'}</span></p>
+                        <p class="text-sm text-gray-200 mt-3">The detailed results file should be available for download from the Flask server.</p>
+                    </div>
+                `;
+            } else {
+                const isCandidate = result.prediction === 1;
+                const resultText = result.result_label;
+
+                resultHtml = `
+                    <div class="result-box ${isCandidate ? 'result-candidate' : 'result-false-positive'}">
+                        <p class="text-2xl mb-2">Classification Result: <span class="font-bold">${resultText}</span></p>
+                        <p>Confidence: ${result.confidence}%</p>
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = resultHtml + `<div class="mt-3 text-xs text-center text-gray-500">
+                Prediction made by the live Flask ML server.
+            </div>`;
+
+
+        } catch (e) {
+            console.error("Prediction Error:", e);
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">
+                ❌ ML Prediction Failed: ${e.message}. Ensure 'app.py' is running.
+            </div>`;
+        } finally {
+            predictButton.textContent = 'Predict (ML Server)';
+            predictButton.disabled = false;
+        }
+    };
+
+
+    // LLM Synthesis (New Feature)
+    window.generateSynthesis = async function(event) {
+        event.preventDefault();
+
+        const { data, hasData, hasFileInput } = getExoplanetData();
+        const resultDiv = document.getElementById('prediction-result');
+        const synthesisButton = document.getElementById('synthesis-button');
+
+        if (!hasData) {
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">
+                Please enter some manual planet parameters to generate a scientific hypothesis.
+            </div>`;
+            return;
+        }
+
+        if (hasFileInput) {
+             resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">
+                Please remove the file upload to perform manual parameter analysis.
+            </div>`;
+            return;
+        }
+
+        synthesisButton.textContent = 'Synthesizing...';
+        synthesisButton.disabled = true;
+
+        resultDiv.innerHTML = `<div class="mt-4 text-center">
+            <svg class="animate-spin h-5 w-5 mr-3 inline text-white" viewBox="0 0 24 24">...</svg>
+            Generating hypothesis with LLM...
+        </div>`;
+
+        // 1. Construct the LLM Query based on available data
+        let parameterList = "";
+        for (const key of FEATURE_ORDER) {
+            if (data[key] !== null) {
+                // Formatting for readability
+                let unit = '';
+                if (key.includes('orbper')) unit = ' days';
+                else if (key.includes('trandurh')) unit = ' hours';
+                else if (key.includes('trandep')) unit = ' ppm';
+                else if (key.includes('rade')) unit = ' R_Earth';
+                else if (key.includes('insol')) unit = ' Earth flux';
+                else if (key.includes('eqt') || key.includes('teff')) unit = ' K';
+                else if (key.includes('rad')) unit = ' R_Sun';
+                else if (key.includes('ra') || key.includes('dec')) unit = ' deg';
+
+                parameterList += `- ${key}: ${data[key]}${unit}\n`;
+            }
+        }
+        
+        const userQuery = `Analyze the following exoplanet candidate data and provide a concise, two-paragraph scientific hypothesis. Only use the provided parameters.
+        
+        1. *Classification:* Based on its radius, period, and insolation, suggest its most likely physical classification (e.g., rocky, mini-Neptune, gas giant).
+        2. *Habitability:* Assess its potential for being in the habitable zone based on its equilibrium temperature and host star temperature/radius.
+
+        The data is:\n${parameterList}`;
+        
+        const systemPrompt = "You are an exoplanetary scientist. Respond with a formal, professional hypothesis structured clearly into two paragraphs: Classification and Habitability. Do not use markdown bullet points in the response, just natural paragraphs. If data is missing (null), clearly state that this limits the certainty of the hypothesis.";
+
+        // 2. Prepare API Payload
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            // No grounding needed, as we are analyzing user-provided data
+            systemInstruction: {
+                parts: [{ text: systemPrompt }]
+            },
+        };
+
+        try {
+            const response = await retryFetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (text) {
+                resultDiv.innerHTML = `
+                    <div class="search-result-card">
+                        <p class="font-semibold text-white mb-2 text-center text-xl">✨ Scientific Synthesis (LLM)</p>
+                        <div class="text-gray-300 space-y-4 p-2">${text.replace(/\n\n/g, '<p>')}</div>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">Could not generate a synthesis for the provided data.</div>`;
+            }
+
+        } catch (e) {
+            console.error("Synthesis Error:", e);
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">Error: Failed to connect to the synthesis service.</div>`;
+        } finally {
+            synthesisButton.textContent = '✨ Generate Synthesis (LLM)';
+            synthesisButton.disabled = false;
+        }
+    }
+
+
+    // =================================================================
+    // SEARCH LOGIC (🔭 Explore Known Planets & 🔊 Read Aloud)
+    // =================================================================
+
+    window.searchPlanets = async function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('planet_name').value.trim();
+        const teff = document.getElementById('st_teff_search').value.trim();
+        const resultDiv = document.getElementById('search-result');
+        const searchButton = document.getElementById('search-button');
+
+        if (!name && !teff) {
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">Please enter a Planet Name or Star Temperature to search.</div>`;
+            return;
+        }
+
+        searchButton.textContent = 'Searching...';
+        searchButton.disabled = true;
+        resultDiv.innerHTML = `<div class="mt-4 text-center">
+            <svg class="animate-spin h-5 w-5 mr-3 inline text-white" viewBox="0 0 24 24">...</svg>
+            Querying astronomical databases via Gemini...
+        </div>`;
+
+        // 1. Construct the LLM Query
+        let userQuery = "Search for known exoplanets and provide a concise, factual summary of the key physical parameters. ";
+        
+        if (name) {
+            userQuery += `Focus the search primarily on the exoplanet: ${name}.`;
+        }
+        if (teff) {
+            userQuery += ` The star's effective temperature (Stellar Teff) is a critical filter and should be around ${teff} Kelvin.`;
+        }
+        userQuery += " Include the Planet Radius (R_Earth), Orbital Period (days), and Star Temperature (K).";
+        
+        const systemPrompt = "You are an expert astronomical data analyst. Your goal is to find information on exoplanets using the provided search tool and synthesize the results into a clear, bulleted list of key parameters for the requested planet(s). Only use information from the grounded search results.";
+
+
+        // 2. Prepare API Payload
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            tools: [{ "google_search": {} }],
+            systemInstruction: {
+                parts: [{ text: systemPrompt }]
+            },
+        };
+
+        try {
+            const response = await retryFetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                const text = candidate.content.parts[0].text;
+                lastGeneratedText = text; // Store for TTS
+                
+                // Extract grounding sources
+                let sourcesHtml = '';
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    const sources = groundingMetadata.groundingAttributions
+                        .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                        .filter(source => source.uri && source.title)
+                        .slice(0, 3); 
+
+                    sourcesHtml = sources.map(source => `
+                        <a href="${source.uri}" target="_blank" class="citation block truncate" title="${source.uri}">
+                            Source: ${source.title}
+                        </a>
+                    `).join('');
+                }
+                
+                // Create a button to read the text aloud
+                const readAloudButton = `
+                    <button onclick="readAloud(this)" id="tts-button" class="mt-4 w-full text-sm font-semibold py-2 rounded-lg 
+                        bg-teal-600 hover:bg-teal-700 transition duration-150 text-white shadow-md">
+                        🔊 Read Search Results Aloud
+                    </button>
+                `;
+
+
+                resultDiv.innerHTML = `
+                    <div class="search-result-card">
+                        <p class="font-semibold text-white mb-2">Exoplanet Data Summary</p>
+                        <div class="text-gray-300 space-y-2">${marked(text)}</div>
+                        ${sourcesHtml}
+                        ${readAloudButton}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">Could not find information for the given query.</div>`;
+                lastGeneratedText = "";
+            }
+
+        } catch (e) {
+            console.error("API Error:", e);
+            resultDiv.innerHTML = `<div class="mt-4 text-sm text-red-400 text-center">Error: Failed to connect to the search service. Please try again.</div>`;
+            lastGeneratedText = "";
+        } finally {
+            searchButton.textContent = 'Search Exoplanet Data';
+            searchButton.disabled = false;
+        }
+    };
+    
+    // Simple markdown parser for Gemini output
+    function marked(markdown) {
+        let html = markdown;
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+        html = html.replace(/^- (.*)/gm, '<li class="ml-4 list-disc">$1</li>'); // Bullet list
+        if (html.includes('<li>')) {
+            html = `<ul>${html}</ul>`;
+        }
+        return html;
+    }
+
+
+    // LLM TTS (New Feature)
+    window.readAloud = async function(buttonElement) {
+        if (!lastGeneratedText) {
+            console.warn("No text available to read.");
+            return;
+        }
+
+        const originalText = buttonElement.textContent;
+        const resultText = lastGeneratedText.replace(/\*/g, '').replace(/-/g, ' comma ').replace(/\n/g, ' ');
+
+        buttonElement.textContent = 'Generating Audio...';
+        buttonElement.disabled = true;
+
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{
+                parts: [{ text: `Say in a clear, informative tone: ${resultText}` }]
+            }],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: "Charon" } // Informative voice
+                    }
+                }
+            },
+        };
+
+        try {
+            const response = await retryFetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            const audioData = part?.inlineData?.data;
+            const mimeType = part?.inlineData?.mimeType;
+
+            if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                const match = mimeType.match(/rate=(\d+)/);
+                const sampleRate = match ? parseInt(match[1], 10) : 24000;
+                
+                const pcmData = base64ToArrayBuffer(audioData);
+                const pcm16 = new Int16Array(pcmData);
+                const wavBlob = pcmToWav(pcm16, sampleRate);
+                const audioUrl = URL.createObjectURL(wavBlob);
+                
+                const audio = new Audio(audioUrl);
+                audio.onended = () => {
+                    buttonElement.textContent = originalText;
+                    buttonElement.disabled = false;
+                    URL.revokeObjectURL(audioUrl);
+                };
+                audio.play().catch(e => console.error("Audio playback failed:", e));
+
+                buttonElement.textContent = '🔊 Playing...'; // Keep disabled while playing
+                
+            } else {
+                 console.error("Invalid TTS response structure or data.");
+                 buttonElement.textContent = 'Audio Error!';
+            }
+
+        } catch (e) {
+            console.error("TTS API Error:", e);
+            buttonElement.textContent = 'Audio Error!';
+        } finally {
+            // Only re-enable if playback hasn't started successfully
+            if (buttonElement.textContent.includes('Error')) {
+                buttonElement.disabled = false;
+                setTimeout(() => buttonElement.textContent = originalText, 2000);
+            }
+        }
+    };
+    
+</script>
+</body>
+</html>
+
